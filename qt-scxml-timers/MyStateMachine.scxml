@@ -1,0 +1,25 @@
+<scxml initial="idle" version="1.0" xmlns="http://www.w3.org/2005/07/scxml">
+
+   datamodel="cplusplus"
+   <state id="idle">
+    <onentry>
+	    <log expr="State is idle" label="INFO"/>
+    </onentry>
+		
+    <transition event="start" target="running"/>
+   </state>
+
+  <state id="running">
+   <onentry>
+
+   <log expr="State is running" label="INFO"/>
+  
+    <send event="onTransition"> 
+      <param name="state" expr="m_parameter"/>
+    </send>
+
+  </onentry>
+   <transition event="stop" target="idle"/>
+  </state>
+</scxml>
+

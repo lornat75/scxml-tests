@@ -8,39 +8,37 @@
 
 #include <thread>
 #include <chrono>
+#include <mutex>
 
-void myFunction(MyStateMachine *machine)
+std::mutex g_i_mutex; 
+
+void myCallback(MyStateMachine *machine)
 {
-
+  //we can use count in the while to iterate a certain number of times
   int count=1000000;
-  while(count--) {
-   // count++;
+  while(true) {
+    count++;
     //std::cout<<"Thread is running...\n";
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(0));
+
+    // const std::lock_guard<std::mutex> lock(g_i_mutex);
 
     if (count%2==0)
     {
-      //  std::cout<<"Submitting start...\n";
+        // std::cout<<"Submitting start...\n";
         machine->submitEvent("start");
-     // machine->submitEvent("onTransition");
     }
     else
     {
-       // std::cout<<"Submitting stop...\n";
+
+        // std::cout<<"Submitting stop...\n";
         machine->submitEvent("stop");
     }
 
   }
 
-  count=10;
-  while(count--)
-  {
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-  }
-
-  QCoreApplication::quit();
+   // if we ever reach here close the application
+   QCoreApplication::quit();
 }
 
 int main(int argc, char *argv[])
@@ -50,13 +48,12 @@ int main(int argc, char *argv[])
   MyStateMachine stateMachine;
   
   stateMachine.connectToEvent("onTransition", [](const QScxmlEvent &event){
-    /* std::cout << event.data().isNull() << std::endl;
-    std::cout << event.data().toMap()["state"].toString().toStdString() << std::endl; */
+    // std::cout << event.data().isNull() << std::endl;
+    // std::cout << event.data().toMap()["state"].toString().toStdString() << std::endl;
     std::cout << "received message onTransition";
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     std::cout << "...done!"<< std::endl;
   });
-
 
   stateMachine.start();
 
@@ -65,12 +62,13 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  std::thread t1(myFunction, &stateMachine);
+  std::thread mycallback(myCallback, &stateMachine);
 
-  int ret=app.exec();
+  int ret=0;
+  ret=app.exec();
 
-  t1.join();
-
+  mycallback.join();
+  
   return ret;
   
 }
